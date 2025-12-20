@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>冬至·团圆入口</title>
+  <meta name="description" content="冬至节日入口页：云包饺子互动小游戏与暖心祝福留言板。" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <style>
+    :root{
+      --bg0:#fff7ed;
+      --bg1:#fff1d6;
+      --ink:#2b211c;
+      --ink2:#7a4b2f;
+      --card:rgba(255,255,255,.78);
+      --border:rgba(180,120,80,.22);
+      --shadow: 0 26px 90px rgba(59,47,42,.18);
+      --accent:#ea580c;
+      --accent2:#f59e0b;
+      --accent3:#dc2626;
+    }
+    *,*::before,*::after{box-sizing:border-box;}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      color:var(--ink);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif;
+      background:
+        radial-gradient(900px 520px at 18% 18%, rgba(245,158,11,.22), transparent 62%),
+        radial-gradient(760px 520px at 88% 22%, rgba(220,38,38,.16), transparent 66%),
+        radial-gradient(900px 700px at 60% 92%, rgba(234,88,12,.14), transparent 66%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 52%, #ffe3c8 100%);
+      overflow-x:hidden;
+    }
+    .grain::before{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+      opacity:.33;
+      mix-blend-mode:multiply;
+    }
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: clamp(18px, 4vw, 44px);
+      position:relative;
+    }
+    .card{
+      width:min(980px, 100%);
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      padding: clamp(18px, 3.4vw, 34px);
+      position:relative;
+      overflow:hidden;
+    }
+    .topline{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(234,88,12,.22);
+      background: rgba(255,255,255,.62);
+      color: rgba(122,75,47,.95);
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+    .badge strong{color: var(--ink);}
+    h1{
+      margin: 14px 0 6px;
+      font-size: clamp(26px, 3.2vw, 40px);
+      letter-spacing: -.3px;
+      line-height:1.15;
+    }
+    .sub{
+      margin:0;
+      color: rgba(122,75,47,.95);
+      font-size: clamp(14px, 1.6vw, 16px);
+      line-height:1.8;
+      max-width: 62ch;
+    }
+    .grid{
+      margin-top: clamp(16px, 2.2vw, 22px);
+      display:grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 14px;
+    }
+    @media (min-width: 760px){
+      .grid{grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;}
+    }
+    .entry{
+      border-radius: 26px;
+      border: 1px solid rgba(180,120,80,.20);
+      background: rgba(255,255,255,.66);
+      overflow:hidden;
+      position:relative;
+    }
+    .entry::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(420px 220px at 18% 18%, rgba(234,88,12,.10), transparent 62%),
+        radial-gradient(460px 240px at 88% 26%, rgba(245,158,11,.12), transparent 66%);
+      pointer-events:none;
+    }
+    .entry-in{
+      position:relative;
+      padding: 18px 18px 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      min-height: 170px;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .name{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -.2px;
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(234,88,12,.18);
+      background: rgba(255,255,255,.72);
+      font-size: 12px;
+      color: rgba(122,75,47,.95);
+      white-space:nowrap;
+    }
+    .desc{
+      margin:0;
+      color: rgba(122,75,47,.95);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .btn{
+      margin-top:auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 0;
+      font-weight: 700;
+      font-size: 15px;
+      cursor:pointer;
+      text-decoration:none;
+      color: #fff;
+      box-shadow: 0 18px 50px rgba(234,88,12,.20);
+      transform: translateY(0);
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .btn:active{transform: translateY(1px);}
+    .btn-a{background: linear-gradient(90deg, var(--accent), var(--accent2));}
+    .btn-b{background: linear-gradient(90deg, var(--accent3), var(--accent2));}
+    .btn:hover{filter: saturate(1.05) brightness(1.02);}
+    .ico{
+      width:40px;height:40px;border-radius:16px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(180,120,80,.22);
+      box-shadow: 0 10px 30px rgba(59,47,42,.10);
+      font-size: 22px;
+    }
+    .float{
+      position:absolute;
+      inset: -40px -40px auto auto;
+      width: 220px; height: 220px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.72), rgba(255,255,255,0) 62%);
+      filter: blur(0.2px);
+      opacity: .55;
+      animation: breathe 3.2s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes breathe{0%,100%{transform: scale(1)}50%{transform: scale(1.03)}}
+    .snow{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+    }
+    .snow i{
+      position:absolute;
+      top:-18px;
+      opacity:.42;
+      font-style:normal;
+      animation: fall 10s linear infinite;
+      filter: drop-shadow(0 6px 10px rgba(59,47,42,.08));
+    }
+    .snow i:nth-child(1){left:10%; animation-duration: 12s; animation-delay: 0s; font-size:14px;}
+    .snow i:nth-child(2){left:22%; animation-duration: 10.5s; animation-delay: 1.2s; font-size:16px;}
+    .snow i:nth-child(3){left:36%; animation-duration: 13s; animation-delay: 2.4s; font-size:12px;}
+    .snow i:nth-child(4){left:52%; animation-duration: 11.2s; animation-delay: 0.7s; font-size:18px;}
+    .snow i:nth-child(5){left:68%; animation-duration: 12.6s; animation-delay: 1.8s; font-size:13px;}
+    .snow i:nth-child(6){left:82%; animation-duration: 10.8s; animation-delay: 2.9s; font-size:16px;}
+    .snow i:nth-child(7){left:92%; animation-duration: 13.8s; animation-delay: 0.4s; font-size:12px;}
+    @keyframes fall{
+      0%{transform: translate3d(0, 0, 0) rotate(0deg)}
+      100%{transform: translate3d(-20px, 110vh, 0) rotate(120deg)}
+    }
+    .foot{
+      margin-top: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      color: rgba(122,75,47,.9);
+      font-size: 12px;
+    }
+    .foot a{color: rgba(122,75,47,.95); text-decoration:none; border-bottom: 1px dashed rgba(122,75,47,.35)}
+  </style>
+</head>
+<body class="grain">
+  <div class="snow" aria-hidden="true">
+    <i>❄</i><i>❅</i><i>❄</i><i>❅</i><i>❄</i><i>❅</i><i>❄</i>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <div class="float" aria-hidden="true"></div>
+      <div class="topline">
+        <div class="badge"><span>冬至</span><strong>团圆入口</strong><span>·</span><span>Warm & Cozy</span></div>
+        <div class="badge"><span>🥟</span><span>一口热乎</span><span>→</span><span>一份团圆</span></div>
+      </div>
+      <h1>把祝福包进饺子里，把团圆留在这一刻</h1>
+      <p class="sub">选择一个入口开始冬至仪式：玩一局云包饺子，或写下一句暖心祝福，让它变成锅里的一只饺子。</p>
+
+      <div class="grid">
+        <section class="entry">
+          <div class="entry-in">
+            <div class="row">
+              <div class="name"><span class="ico" aria-hidden="true">🥟</span><span>云包饺子·冬至团圆局</span></div>
+              <div class="pill">互动小游戏</div>
+            </div>
+            <p class="desc">和面、擀皮、包馅、下锅，生成你的专属饺子结果页，还能生成分享图片。</p>
+            <a class="btn btn-a" href="/cloud/">进入云包饺子 <span aria-hidden="true">→</span></a>
+          </div>
+        </section>
+
+        <section class="entry">
+          <div class="entry-in">
+            <div class="row">
+              <div class="name"><span class="ico" aria-hidden="true">🍲</span><span>冬至暖心祝福留言板</span></div>
+              <div class="pill">祝福墙</div>
+            </div>
+            <p class="desc">写一句想在冬至说出口的话，让它化作锅里的一只饺子，被更多人轻轻点开。</p>
+            <a class="btn btn-b" href="/dumpling/">进入祝福留言板 <span aria-hidden="true">→</span></a>
+          </div>
+        </section>
+      </div>
+
+      <div class="foot">
+        <span>愿你冬有暖阳，心有归处。</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

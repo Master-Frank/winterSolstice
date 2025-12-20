@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>云包饺子·冬至团圆局</title>
+  <meta name="description" content="冬至主题暖色治愈 H5 互动小游戏：和面、擀皮、包饺子、下锅，生成专属饺子结果页。" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="grain">
+  <canvas id="fx"></canvas>
+
+  <div class="app-layer min-h-screen safe-top safe-bottom">
+    <div class="mx-auto w-full max-w-[880px] px-3 sm:px-4 pb-10">
+      <!-- Header -->
+      <header class="pt-3">
+        <div class="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="mobile-title-pad">
+            <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#3b2f2a] sm:text-3xl">云包饺子·冬至团圆局</h1>
+            <p class="mt-1 text-sm text-[#6b4e3d]">慢慢来，揉一团暖意；包一口想念。</p>
+          </div>
+          <div class="mobile-actions flex items-center gap-2">
+            <button id="btnHelp" class="rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">玩法</button>
+            <button id="btnSound" class="rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90" aria-pressed="false">轻声</button>
+          </div>
+        </div>
+
+        <!-- Step indicator (mobile-friendly) -->
+        <div id="stepIndicator" class="mt-4 rounded-2xl border border-[#6b4e3d]/10 bg-white/60 px-4 py-3 shadow-sm">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <!-- Steps: horizontally scrollable on small screens -->
+            <div class="no-scrollbar -mx-1 flex flex-wrap items-center gap-2 px-1 py-1 sm:flex-nowrap sm:gap-3 sm:overflow-visible">
+              <div class="flex items-center gap-2 whitespace-nowrap rounded-full border border-[#6b4e3d]/10 bg-white/50 px-3 py-1">
+                <span id="dot1" class="dot on"></span>
+                <span class="text-xs text-[#6b4e3d]">和面</span>
+              </div>
+              <div class="hidden h-px w-6 shrink-0 bg-[#6b4e3d]/15 sm:block sm:w-8"></div>
+              <div class="flex items-center gap-2 whitespace-nowrap rounded-full border border-[#6b4e3d]/10 bg-white/50 px-3 py-1">
+                <span id="dot2" class="dot"></span>
+                <span class="text-xs text-[#6b4e3d]">擀皮</span>
+              </div>
+              <div class="hidden h-px w-6 shrink-0 bg-[#6b4e3d]/15 sm:block sm:w-8"></div>
+              <div class="flex items-center gap-2 whitespace-nowrap rounded-full border border-[#6b4e3d]/10 bg-white/50 px-3 py-1">
+                <span id="dot3" class="dot"></span>
+                <span class="text-xs text-[#6b4e3d]">包饺子</span>
+              </div>
+              <div class="hidden h-px w-6 shrink-0 bg-[#6b4e3d]/15 sm:block sm:w-8"></div>
+              <div class="flex items-center gap-2 whitespace-nowrap rounded-full border border-[#6b4e3d]/10 bg-white/50 px-3 py-1">
+                <span id="dot4" class="dot"></span>
+                <span class="text-xs text-[#6b4e3d]">下锅</span>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="flex items-center gap-2 sm:justify-end">
+              <span class="text-xs text-[#6b4e3d]/80">进度</span>
+              <div class="h-2 w-full min-w-0 flex-1 overflow-hidden rounded-full bg-[#6b4e3d]/10 sm:w-28 sm:flex-none">
+                <div id="bar" class="h-full w-1/4 rounded-full bg-gradient-to-r from-orange-500 to-amber-400" style="transition: width .35s cubic-bezier(.2,.8,.2,1);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main area -->
+      <main class="mt-4">
+        <!-- STEP 1 -->
+        <section id="step1" class="panel active fade-in">
+          <div class="card rounded-3xl p-4 sm:p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold">第一步：和面</h2>
+                <p class="mt-1 text-sm text-[#6b4e3d]">把 <span class="font-medium text-[#3b2f2a]">面粉</span> 和 <span class="font-medium text-[#3b2f2a]">清水</span> 拖进碗里，慢慢揉成团。</p>
+              </div>
+              <div class="text-xs text-[#6b4e3d]/80">提示：拖拽到碗中间更稳</div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl border border-[#6b4e3d]/10 bg-gradient-to-b from-white/70 to-white/30 p-4">
+                <div id="bowl" class="bowl relative h-52 w-72 rounded-[999px]">
+                  <div class="absolute inset-x-10 top-10 h-20 rounded-[999px] bg-white/35"></div>
+                  <div id="mixHint" class="absolute left-1/2 top-1/2 w-[240px] -translate-x-1/2 -translate-y-1/2 text-center text-xs text-[#6b4e3d]/80">把食材拖进来</div>
+                  <div id="doughBall" class="absolute left-1/2 top-1/2 hidden h-20 w-24 -translate-x-1/2 -translate-y-1/2 rounded-[999px] dumpling-skin"></div>
+                </div>
+
+                <!-- soft sparkles -->
+                <div class="pointer-events-none absolute left-8 top-8 h-2 w-2 rounded-full bg-orange-200/60" style="animation: shine 2.8s ease-in-out infinite;"></div>
+                <div class="pointer-events-none absolute right-10 top-10 h-2 w-2 rounded-full bg-amber-200/60" style="animation: shine 3.4s ease-in-out infinite .4s;"></div>
+                <div class="pointer-events-none absolute left-14 bottom-10 h-2 w-2 rounded-full bg-orange-200/50" style="animation: shine 3.1s ease-in-out infinite .8s;"></div>
+              </div>
+
+              <div class="relative min-h-[320px] rounded-3xl border border-[#6b4e3d]/10 bg-white/50 p-4 sm:p-5">
+                <div class="flex items-center justify-between">
+                  <div class="text-sm font-medium text-[#3b2f2a]">食材</div>
+                  <div class="text-xs text-[#6b4e3d]/75">已加入：<span id="ingCount">0</span>/2</div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-2">
+                  <div id="flour" class="draggable floaty rounded-2xl border border-orange-200/60 bg-gradient-to-b from-white/90 to-orange-50/60 p-3 shadow-sm">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="text-sm font-semibold">面粉</div>
+                        <div class="text-xs text-[#6b4e3d]/75">柔软的底气</div>
+                      </div>
+                      <div class="h-10 w-10 rounded-2xl bg-orange-100/80 p-2">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 8c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round"/>
+                          <path d="M7 9h10l-1 12H8L7 9Z" fill="#fff" stroke="#6b4e3d" stroke-opacity=".25" stroke-width="1.5"/>
+                          <path d="M9.5 13.5c.8.6 1.7.9 2.5.9s1.7-.3 2.5-.9" stroke="#ea580c" stroke-opacity=".7" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="water" class="draggable floaty rounded-2xl border border-sky-200/70 bg-gradient-to-b from-white/90 to-sky-50/60 p-3 shadow-sm" style="animation-delay:.2s">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="text-sm font-semibold">清水</div>
+                        <div class="text-xs text-[#6b4e3d]/75">把思念调匀</div>
+                      </div>
+                      <div class="h-10 w-10 rounded-2xl bg-sky-100/70 p-2">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 3s5 6 5 10a5 5 0 1 1-10 0c0-4 5-10 5-10Z" fill="#dbeafe" stroke="#2563eb" stroke-opacity=".7" stroke-width="1.5"/>
+                          <path d="M10 15c.4 1.3 1.4 2 3 2" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 rounded-2xl border border-[#6b4e3d]/10 bg-white/60 p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-xs text-[#6b4e3d]/80">揉面进度</div>
+                    <div id="kneadText" class="text-xs font-medium text-orange-700">等待食材</div>
+                  </div>
+                  <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#6b4e3d]/10">
+                    <div id="kneadBar" class="h-full w-0 rounded-full bg-gradient-to-r from-orange-500 to-amber-400" style="transition: width .35s cubic-bezier(.2,.8,.2,1)"></div>
+                  </div>
+                </div>
+
+                <div class="mt-4 text-xs leading-5 text-[#6b4e3d]/80">
+                  <p>冬天的手容易凉，慢一点也没关系。</p>
+                  <p class="mt-1">把热气留在碗里，把团圆留在心里。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section id="step2" class="panel fade-in">
+          <div class="card rounded-3xl p-4 sm:p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold">第二步：擀皮</h2>
+                <p class="mt-1 text-sm text-[#6b4e3d]">在面团上 <span class="font-medium text-[#3b2f2a]">左右滑动</span>，让饺子皮慢慢变大、变薄。</p>
+              </div>
+              <div class="text-xs text-[#6b4e3d]/80">提示：多滑几次，节奏放松</div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="relative min-h-[320px] overflow-hidden rounded-3xl border border-[#6b4e3d]/10 bg-gradient-to-b from-white/70 to-white/30 p-4">
+                <div class="absolute left-4 top-4 rounded-full border border-[#6b4e3d]/10 bg-white/60 px-3 py-1 text-xs text-[#6b4e3d]">滑动区域</div>
+                <div class="absolute right-4 top-4 rounded-full border border-[#6b4e3d]/10 bg-white/60 px-3 py-1 text-xs text-[#6b4e3d]">进度 <span id="rollPct">0</span>%</div>
+
+                <div class="mt-10 flex h-[240px] items-center justify-center">
+                  <div id="rollArea" class="relative flex h-[240px] w-full items-center justify-center rounded-3xl border border-[#6b4e3d]/10 bg-white/40">
+                    <div id="wrapper" class="wrapper roll-dough h-28 w-28 rounded-full" style="transform: scale(1);"></div>
+                    <div class="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 text-xs text-[#6b4e3d]/75">左右滑动擀皮</div>
+                    <div id="rollWave" class="pointer-events-none absolute inset-0 opacity-0" style="transition: opacity .25s ease">
+                      <div class="absolute left-6 top-24 h-10 w-20 rounded-full bg-orange-200/35 blur-xl"></div>
+                      <div class="absolute right-10 top-28 h-10 w-24 rounded-full bg-amber-200/35 blur-xl"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="relative min-h-[320px] rounded-3xl border border-[#6b4e3d]/10 bg-white/50 p-4 sm:p-5">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="text-sm font-medium text-[#3b2f2a]">手感</div>
+                  <div id="rollNote" class="text-xs text-[#6b4e3d]/75">像把冬天揉得更软一点</div>
+                </div>
+
+                <div class="mt-4 rounded-2xl border border-[#6b4e3d]/10 bg-white/60 p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-xs text-[#6b4e3d]/80">擀皮进度</div>
+                    <div id="rollText" class="text-xs font-medium text-orange-700">开始滑动</div>
+                  </div>
+                  <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#6b4e3d]/10">
+                    <div id="rollBar" class="h-full w-0 rounded-full bg-gradient-to-r from-orange-500 to-amber-400" style="transition: width .2s ease"></div>
+                  </div>
+                </div>
+
+                <div class="mt-4 text-xs leading-5 text-[#6b4e3d]/80">
+                  <p>擀得越圆，愿望越完整。</p>
+                  <p class="mt-1">擀得越薄，牵挂越轻快。</p>
+                </div>
+
+                <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                  <button id="btnSkip2" class="w-full rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90 sm:w-auto">我擀得差不多了</button>
+                  <span class="text-xs text-[#6b4e3d]/70">（进度≥90%更有仪式感）</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section id="step3" class="panel fade-in">
+          <div class="card rounded-3xl p-4 sm:p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold">第三步：包饺子</h2>
+                <p class="mt-1 text-sm text-[#6b4e3d]">先选一个馅儿，再点击饺子边缘 <span class="font-medium text-[#3b2f2a]">捏合</span>，把心意封好。</p>
+              </div>
+              <div class="text-xs text-[#6b4e3d]/80">提示：轻点 6 次完成捏合</div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="relative min-h-[320px] rounded-3xl border border-[#6b4e3d]/10 bg-white/50 p-4 sm:p-5">
+                <div class="text-sm font-medium text-[#3b2f2a]">选择馅料</div>
+                <div id="fillings" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <button data-filling="pork" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-rose-100/70 text-xl flex items-center justify-center">🐷</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">猪肉</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="beef" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-amber-100/70 text-xl flex items-center justify-center">🐮</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">牛肉</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="lamb" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-slate-100/70 text-xl flex items-center justify-center">🐑</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">羊肉</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="chive" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-emerald-100/70 text-xl flex items-center justify-center">🥬</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">韭菜</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="onion" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-violet-100/70 text-xl flex items-center justify-center">🧅</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">洋葱</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="shrimp" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-orange-100/70 text-xl flex items-center justify-center">🦐</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">鲜虾</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="corn" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-yellow-100/70 text-xl flex items-center justify-center">🌽</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">玉米</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="mushroom" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-stone-100/70 text-xl flex items-center justify-center">🍄</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">香菇</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button data-filling="egg" class="fbtn rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-3 text-left shadow-sm hover:bg-white">
+                    <div class="flex items-center gap-3">
+                      <div class="h-10 w-10 shrink-0 rounded-2xl bg-amber-50/70 text-xl flex items-center justify-center">🥚</div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold">鸡蛋</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="mt-4 rounded-2xl border border-[#6b4e3d]/10 bg-white/60 p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-xs text-[#6b4e3d]/80">已选馅料</div>
+                    <div id="fillingName" class="flex flex-wrap items-center justify-end gap-2 text-xs font-medium text-orange-700">未选择</div>
+                  </div>
+                </div>
+
+                <div class="mt-4 text-xs leading-5 text-[#6b4e3d]/80">
+                  <p>冬至的饺子里，装着一年的圆满。</p>
+                  <p class="mt-1">你选的馅儿，就是你这一冬的性格签。</p>
+                </div>
+              </div>
+
+              <div class="relative min-h-[320px] overflow-hidden rounded-3xl border border-[#6b4e3d]/10 bg-gradient-to-b from-white/70 to-white/30 p-4">
+                <div class="absolute left-4 top-4 rounded-full border border-[#6b4e3d]/10 bg-white/60 px-3 py-1 text-xs text-[#6b4e3d]">捏合台</div>
+                <div class="absolute right-4 top-4 rounded-full border border-[#6b4e3d]/10 bg-white/60 px-3 py-1 text-xs text-[#6b4e3d]">捏合 <span id="pinchPct">0</span>/6</div>
+
+                <div class="mt-10 flex h-[240px] items-center justify-center">
+                  <button id="pinchZone" class="relative h-48 w-72 overflow-hidden rounded-[999px] dumpling-skin focus:outline-none" aria-label="点击捏合饺子">
+                    <div id="fillingIcon" class="pointer-events-none absolute hidden"></div>
+                    <div id="skinL" class="pointer-events-none absolute left-0 top-0 h-full w-[56%] skin-flap"></div>
+                    <div id="skinR" class="pointer-events-none absolute right-0 top-0 h-full w-[56%] skin-flap"></div>
+                    <div id="gap" class="pointer-events-none absolute left-1/2 top-1/2 h-4 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/55" style="filter: blur(.2px);"></div>
+                    <div class="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-[#6b4e3d]/75">轻点边缘捏合</div>
+                  </button>
+                </div>
+
+                <div id="pinchTip" class="mt-2 text-center text-xs text-[#6b4e3d]/75">先选择馅料，再捏合</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section id="step4" class="panel fade-in">
+          <div class="card rounded-3xl p-4 sm:p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold">第四步：下锅</h2>
+                <p class="mt-1 text-sm text-[#6b4e3d]">把饺子 <span class="font-medium text-[#3b2f2a]">拖进锅里</span>，听见咕嘟一声，团圆就到家。</p>
+              </div>
+              <div class="text-xs text-[#6b4e3d]/80">提示：放进锅中央会更顺</div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="relative min-h-[320px] overflow-hidden rounded-3xl border border-[#6b4e3d]/10 bg-gradient-to-b from-white/70 to-white/30 p-4">
+                <div id="pot" class="pot relative mx-auto mt-12 h-52 w-72 rounded-[44px]">
+                  <div class="absolute inset-x-8 top-5 h-10 rounded-full bg-black/10"></div>
+                  <div class="absolute left-5 top-16 h-6 w-10 rounded-full bg-[#8b5a46]/70"></div>
+                  <div class="absolute right-5 top-16 h-6 w-10 rounded-full bg-[#8b5a46]/70"></div>
+                  <div class="absolute left-10 top-3 h-3 w-3 rounded-full bg-white/50"></div>
+                  <div class="absolute right-14 top-4 h-3 w-3 rounded-full bg-white/50"></div>
+
+                  <span class="steam" style="left:35%; top:10%; animation-delay:.2s"></span>
+                  <span class="steam" style="left:55%; top:12%; animation-delay:.6s"></span>
+                  <span class="steam" style="left:45%; top:8%; animation-delay:1.0s"></span>
+
+                  <div id="boil" class="absolute inset-0 opacity-0" style="transition: opacity .25s ease">
+                    <div class="absolute left-12 top-14 h-4 w-4 rounded-full bg-white/25"></div>
+                    <div class="absolute left-28 top-18 h-5 w-5 rounded-full bg-white/20"></div>
+                    <div class="absolute right-16 top-16 h-4 w-4 rounded-full bg-white/20"></div>
+                    <div class="absolute right-28 top-22 h-3 w-3 rounded-full bg-white/25"></div>
+                  </div>
+
+                  <div class="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-white/85">汤锅咕嘟咕嘟</div>
+                </div>
+
+                <div class="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 text-xs text-[#6b4e3d]/75">把饺子拖进锅里</div>
+              </div>
+
+              <div class="relative min-h-[320px] rounded-3xl border border-[#6b4e3d]/10 bg-white/50 p-4 sm:p-5">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="text-sm font-medium text-[#3b2f2a]">上锅前的饺子</div>
+                  <div class="text-xs text-[#6b4e3d]/75">手作完成</div>
+                </div>
+
+                <div class="mt-4 flex items-center justify-center">
+                  <div class="relative min-h-[200px] w-full max-w-[360px] rounded-3xl border border-[#6b4e3d]/10 bg-white/60 p-4 sm:h-[220px]">
+                    <div class="absolute left-4 top-4 text-xs text-[#6b4e3d]/75">盘子</div>
+                    <div class="absolute right-4 top-4 text-xs text-[#6b4e3d]/75">拖拽</div>
+
+                    <div class="mt-8 flex items-center justify-center">
+                      <div id="dumplingToPot" class="draggable dumpling-skin floaty h-24 w-40 rounded-[999px]" style="animation-duration:3.4s"></div>
+                    </div>
+
+                    <div class="mt-4 text-center text-xs text-[#6b4e3d]/75">把它送进热汤里，就会有好事发生</div>
+                  </div>
+                </div>
+
+                <div class="mt-4 rounded-2xl border border-[#6b4e3d]/10 bg-white/60 p-3">
+                  <div class="text-xs text-[#6b4e3d]/80">小提示</div>
+                  <div class="mt-1 text-xs text-[#6b4e3d]/75">拖拽饺子 → 放入锅中。成功后会生成你的专属结果页。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RESULT -->
+        <section id="result" class="panel fade-in">
+          <div class="card rounded-3xl p-4 sm:p-6">
+            <div class="flex flex-col gap-4">
+              <div>
+                <h2 class="text-lg font-semibold">你的专属饺子结果页</h2>
+                <p class="mt-1 text-sm text-[#6b4e3d]">这一口热乎，专门为你。</p>
+              </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="relative overflow-hidden rounded-3xl border border-[#6b4e3d]/10 bg-gradient-to-b from-white/70 to-white/30 p-5">
+                <div id="resultDumplingName" class="absolute left-4 top-4 rounded-full border border-[#6b4e3d]/10 bg-white/60 px-3 py-1 text-sm font-semibold text-[#6b4e3d] sm:text-base">饺子</div>
+                <div class="mt-10 flex items-center justify-center">
+                  <div id="dumplingArt" class="w-full max-w-[360px] rounded-3xl bg-white/70 p-4 shadow-sm"></div>
+                </div>
+                <div class="mt-3 text-center text-xs text-[#6b4e3d]/75">把这份团圆签，递给想见的人</div>
+                <div class="mt-3 flex justify-center">
+                  <button id="btnShuffleArt" class="w-full max-w-[360px] rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-4 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">换一张</button>
+                </div>
+              </div>
+
+              <div class="rounded-3xl border border-[#6b4e3d]/10 bg-white/50 p-5">
+                <div class="flex flex-col gap-3">
+                  <div class="rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-4">
+                    <div class="text-xs text-[#6b4e3d]/75">饺子馅人格标签</div>
+                    <div id="persona" class="mt-1 text-lg font-semibold text-[#3b2f2a]"></div>
+                    <div id="personaSub" class="mt-1 text-sm text-[#6b4e3d]"></div>
+                  </div>
+
+                  <div class="rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-4">
+                    <div class="text-xs text-[#6b4e3d]/75">冬至祝福</div>
+                    <div id="finalBless" class="mt-1 text-base font-medium text-[#3b2f2a]"></div>
+                  </div>
+
+                  <div class="rounded-2xl border border-[#6b4e3d]/10 bg-white/70 p-4">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="min-w-0 flex items-baseline gap-2">
+                        <div class="shrink-0 text-xs text-[#6b4e3d]/75">当前</div>
+                        <div class="text-3xl font-semibold text-[#3b2f2a]"><span id="participants">—</span></div>
+                        <div class="min-w-0 text-xs text-[#6b4e3d]/75">人正在云包饺子</div>
+                      </div>
+                      <button id="btnRefreshCount" class="shrink-0 rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">刷新</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 text-xs leading-5 text-[#6b4e3d]/80">
+                  <p>冬至一到，白昼会慢慢变长。</p>
+                  <p class="mt-1">愿你的日子也这样：越过越亮，越过越暖。</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
+              <button id="btnReplay" class="w-full rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 sm:w-auto">再来一局</button>
+              <button id="btnShare" class="w-full rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-4 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90 sm:w-auto">分享</button>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center text-[#6b4e3d]/80">
+            <p class="text-sm font-medium sm:text-base">饺子会散，心意不会 💛</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast / Blessing -->
+  <div id="toast" class="toast hidden">
+    <div class="bubble rounded-2xl px-4 py-3">
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 h-9 w-9 rounded-2xl bg-gradient-to-b from-orange-100 to-amber-100 p-2">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2c2.5 4 6 6.2 6 10.2A6 6 0 1 1 6 12.2C6 8.2 9.5 6 12 2Z" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/>
+            <path d="M9.5 13.5c.8 1.2 1.8 1.8 3 1.8s2.2-.6 3-1.8" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-xs text-[#6b4e3d]/75">冬至祝福</div>
+          <div id="toastText" class="mt-0.5 text-sm font-medium text-[#3b2f2a]"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Help -->
+  <div id="help" class="fixed inset-0 z-[80] hidden">
+    <div class="absolute inset-0 bg-black/25 backdrop-blur-sm"></div>
+    <div class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[500px] px-4 pb-4">
+      <div class="card rounded-3xl p-5">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-lg font-semibold text-[#3b2f2a]">玩法说明</div>
+          <button id="btnCloseHelp" class="rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">关闭</button>
+        </div>
+        <div class="mt-4 space-y-4 text-sm leading-6 text-[#6b4e3d]">
+          <p>🥟 <span class="font-medium text-[#3b2f2a]">揉面：</span> 把面粉和清水拖进碗里，等待面团成型。</p>
+          <p>🥢 <span class="font-medium text-[#3b2f2a]">擀皮：</span> 在面团上左右滑动，把饺子皮擀得又大又圆。</p>
+          <p>🥣 <span class="font-medium text-[#3b2f2a]">包馅：</span> 选择喜欢的馅料，点击饺子皮边缘捏合。</p>
+          <p>🔥 <span class="font-medium text-[#3b2f2a]">下锅：</span> 水开后把饺子拖进锅里，煮熟捞出。</p>
+          <p>✨ <span class="font-medium text-[#3b2f2a]">分享：</span> 生成你的专属饺子海报，查看冬至运势。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Start -->
+  <div id="start" class="fixed inset-0 z-[70]">
+    <div class="absolute inset-0 bg-gradient-to-b from-black/15 to-black/25"></div>
+    <div class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[880px] px-4 pb-4">
+      <div class="card rounded-3xl p-6">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-xs text-[#6b4e3d]/75">冬至仪式 · H5 互动小游戏</div>
+            <div class="mt-1 text-xl font-semibold">欢迎来到《云包饺子·冬至团圆局》</div>
+            <div class="mt-2 text-sm text-[#6b4e3d]">这是一场慢节奏的“云团圆”。准备好了吗？</div>
+          </div>
+          <div class="hidden sm:block text-right text-xs text-[#6b4e3d]/70">
+            <div>建议竖屏体验</div>
+            <div class="mt-1">支持触控与鼠标</div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div class="text-xs text-[#6b4e3d]/70">提示：可在右上角打开“轻声”，获得更温柔的反馈音</div>
+          <button id="btnStart" class="rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 px-5 py-3 text-sm font-medium text-white shadow-sm hover:opacity-95">开始包饺子</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shareSheet" class="fixed inset-0 z-[85] hidden">
+    <div id="shareSheetMask" class="absolute inset-0 bg-black/25"></div>
+    <div class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[880px] px-4 pb-4">
+      <div class="card rounded-3xl p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-lg font-semibold">分享</div>
+            <div class="mt-1 text-sm text-[#6b4e3d]">选择一种分享方式</div>
+          </div>
+          <button id="btnCloseShareSheet" class="rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">关闭</button>
+        </div>
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button id="btnShareLink" class="rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:opacity-95">生成分享链接</button>
+          <button id="btnShareImage" class="rounded-2xl border border-[#6b4e3d]/15 bg-white/70 px-4 py-3 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">生成分享图片</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shareImageModal" class="fixed inset-0 z-[90] hidden">
+    <div id="shareImageMask" class="absolute inset-0 bg-black/35"></div>
+    <div class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[500px] px-4 pb-4 sm:max-w-[600px] md:max-w-[800px]">
+      <div class="card rounded-3xl p-5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-lg font-semibold">分享图片</div>
+            <div class="mt-1 text-sm text-[#6b4e3d]">长按图片保存</div>
+          </div>
+          <button id="btnCloseShareImage" class="rounded-xl border border-[#6b4e3d]/15 bg-white/70 px-3 py-2 text-sm text-[#6b4e3d] shadow-sm hover:bg-white/90">关闭</button>
+        </div>
+        <div class="mt-4 flex justify-center">
+          <img id="shareImagePreview" class="w-full max-w-full rounded-2xl border border-[#6b4e3d]/10 bg-white/70 shadow-sm" alt="分享图片预览" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
