@@ -231,7 +231,7 @@ function showToast(text){
   showToast._t = setTimeout(() => {
     toast.classList.remove("show");
     toast.classList.add("hidden");
-  }, 1900);
+  }, 2500);
 }
 
 function pickBlessing(){
