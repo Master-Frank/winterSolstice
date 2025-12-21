@@ -27,11 +27,17 @@
 - **互动场景**: 
   - **祝福墙**: 页面以一口冒着热气的“锅”为背景，每一条祝福都化作一只漂浮的饺子。
   - **提交祝福**: 用户可以输入 200 字以内的祝福语。
+  - **送达方式**:
+    - **公开分享**：祝福会进入“公开的锅”里，所有人都能点开看到。
+    - **暗号送达**：祝福不会进入公开锅；设置暗号（可选暗号提示）后，通过暗号兑换查看“专属祝福”。
   - **互动体验**: 点击锅里的饺子会弹出精美的祝福卡片；页面伴有动态雪花和蒸汽效果，营造冬日氛围。
 - **核心功能**:
   - **实时统计**: 显示全网累计提交的祝福数量。
   - **动态展示**: 祝福语随机/轮播展示，让每一份温暖都能被看见。
   - **进度反馈**: 随着祝福数量增加，系统会给出不同的暖心文案（如“锅里开始热闹了”）。
+  - **分享方式**:
+    - **链接分享**：复制一段温馨文案（包含分享链接 + 暗号/暗号提示）。
+    - **图片分享**：生成项目同款“雪花背景”分享图，二维码直达兑换页。
 
 ---
 
@@ -43,12 +49,11 @@
   - 动态效果：CSS Animation + 蒸汽/雪花粒子模拟。
 - **后端**: 
   - Node.js + Express 框架。
-  - 接口限流与安全性优化。
+  - 轻量 API：参与人数、祝福提交/兑换、二维码与分享图托管。
 - **数据库**: 
   - **Supabase (PostgreSQL)**: 存储祝福留言与参与人数统计。
-- **部署**: 
-  - 支持 Docker 容器化。
-  - 静态资源与 API 服务统一由 Express 托管。
+- **部署**:
+  - 静态资源与 API 服务统一由 Express 托管（适合直接部署到一台 Node 服务器）。
 
 ---
 
@@ -85,16 +90,44 @@
 npm install
 cp .env.example .env
 ```
-在 `.env` 中填入你的 `SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`。
+在 `.env` 中配置：
+- `SUPABASE_URL`：Supabase 项目 URL
+- `SUPABASE_SERVICE_ROLE_KEY`：服务端 Key（用于写入/读取数据库）
+- `PASSCODE_SECRET`：暗号送达必需，用于 HMAC-SHA256 哈希暗号（建议设置为长随机字符串）
+- `DEFAULT_EVENT`（可选）：`/cloud/` 参与人数统计的 event key
 
 ### 3. 数据库初始化
-将 `supabase/migrations/` 下的 SQL 脚本粘贴到 Supabase 的 SQL Editor 中运行，以创建 `participants` 和 `blessings` 表。
+按顺序运行 `supabase/migrations/` 下的 SQL：
+- `20251220180000_init_winter_solstice.sql`：初始化表与 RPC
+- `20251221021000_add_secret_blessings.sql`：为祝福表增加暗号送达字段（`is_public` / `passcode_hash` / `passcode_hint`）
 
 ### 4. 启动
 ```bash
 npm start
 ```
-访问 `http://localhost:3000` 即可开启冬至之旅。
+访问 `http://localhost:3000` 即可开启冬至之旅（端口被占用时服务会自动尝试 `+1`）。
+
+---
+
+## 🔌 API 速览
+
+- `GET /api/participants?event=...`：读取参与人数
+- `POST /api/participants`：参与人数 +1（body: `{ "event": "..." }`）
+- `GET /api/blessings?limit=20`：获取公开祝福列表（仅 `is_public=true`）
+- `GET /api/blessings/count`：获取公开祝福数量
+- `POST /api/blessings`：提交祝福
+  - 公开：`{ "content": "...", "delivery": "public" }`
+  - 暗号：`{ "content": "...", "delivery": "secret", "passcode": "...", "passcodeHint": "..." }`
+- `POST /api/blessings/redeem`：兑换暗号（body: `{ "passcode": "..." }`）
+- `GET /api/share-qr?data=...`：生成二维码 PNG
+- `POST /api/share-image` + `GET /share-image/:id`：分享图上传与短期托管（内存缓存）
+
+---
+
+## 🔗 分享链接规则（/dumpling）
+
+- 暗号送达且**未填写暗号提示**：分享链接会携带 `code` 参数，例如：`/dumpling/?tab=redeem&code=你的暗号`，打开后自动兑换并展示祝福卡片。
+- 暗号送达且**填写了暗号提示**：分享链接不带 `code` 参数，需要手动输入暗号兑换（避免暗号在链接中明文暴露）。
 
 ---
 

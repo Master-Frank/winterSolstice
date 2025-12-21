@@ -73,17 +73,70 @@
       <div class="pot-handle pot-handle-right"></div>
     </div>
 
-    <!-- 祝福输入区 -->
-    <div class="input-section">
-      <div class="input-wrapper">
-        <textarea id="blessingInput" class="blessing-input" placeholder="写一句想在冬至说出口的话…" maxlength="200"
-          rows="2"></textarea>
-        <span class="char-count"><span id="charCount">0</span>/200</span>
-      </div>
-      <button class="submit-btn" id="submitBtn">
-        <span class="btn-text">包进锅里</span>
-        <span class="btn-icon">🥟</span>
+    <div class="action-switch" id="actionSwitch">
+      <button class="action-btn active" id="actionWrap" type="button">
+        <span class="btn-emoji" aria-hidden="true">🥟</span>
+        <span>包饺子</span>
       </button>
+      <button class="action-btn" id="actionRedeem" type="button">
+        <span class="btn-emoji" aria-hidden="true">🎁</span>
+        <span>兑换暗号</span>
+      </button>
+    </div>
+
+    <div class="action-panel" id="wrapPanel" hidden>
+      <div class="delivery-switch" id="deliverySwitch">
+        <button class="delivery-btn active" id="deliveryPublic" type="button">
+          <span class="btn-emoji" aria-hidden="true">📣</span>
+          <span>公开分享</span>
+        </button>
+        <button class="delivery-btn" id="deliverySecret" type="button">
+          <span class="btn-emoji" aria-hidden="true">🔐</span>
+          <span>暗号送达</span>
+        </button>
+      </div>
+
+      <div class="input-section" id="wrapInputSection" hidden>
+        <div class="input-wrapper">
+          <textarea id="blessingInput" class="blessing-input" placeholder="写一句想在冬至说出口的话…" maxlength="200"
+            rows="2"></textarea>
+          <span class="char-count"><span id="charCount">0</span>/200</span>
+        </div>
+
+        <div class="secret-fields" id="secretFields" hidden>
+          <div class="input-wrapper small">
+            <input id="passcodeInput" class="blessing-input" placeholder="设置暗号（必填）" maxlength="64" />
+          </div>
+          <div class="input-wrapper small">
+            <input id="passcodeHintInput" class="blessing-input" placeholder="暗号提示（可选）" maxlength="80" />
+          </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" disabled>
+          <span class="btn-text">包进锅里</span>
+          <span class="btn-icon">🥟</span>
+        </button>
+      </div>
+
+      <div class="share-actions" id="shareActions" hidden>
+        <button class="share-btn link" id="shareLinkBtn" type="button">
+          <span class="btn-emoji" aria-hidden="true">🔗</span>
+          <span>链接分享</span>
+        </button>
+        <button class="share-btn image" id="shareImageBtn" type="button">
+          <span class="btn-emoji" aria-hidden="true">🖼️</span>
+          <span>图片分享</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="action-panel" id="redeemPanel" hidden>
+      <div class="redeem-box">
+        <div class="input-wrapper">
+          <input id="redeemPasscodeInput" class="blessing-input" placeholder="输入暗号来兑换这只饺子…" maxlength="64" />
+        </div>
+        <button class="redeem-btn" id="redeemBtn" type="button" disabled>寻找饺子</button>
+      </div>
     </div>
 
     <!-- 成功提示 -->
@@ -95,14 +148,51 @@
     <div class="blessing-card" id="blessingCard">
       <div class="card-content">
         <div class="card-dumpling">🥟</div>
+        <div class="card-title" id="cardTitle" hidden>你的专属祝福</div>
+        <div class="card-passcode" id="cardPasscode" hidden></div>
         <p class="card-text" id="cardText"></p>
-        <button class="card-close" id="cardClose">温暖收下</button>
+        <div class="card-note" id="cardNote" hidden></div>
+        <button class="card-close" id="cardClose">把温暖收下</button>
       </div>
     </div>
 
     <!-- 终局效果遮罩 -->
     <div class="finale-overlay" id="finaleOverlay">
       <div class="finale-text">这一锅，是我们一起包的 ✨</div>
+    </div>
+
+    <div class="share-modal" id="shareModal" hidden>
+      <div class="share-modal-backdrop" id="shareModalBackdrop"></div>
+      <div class="share-modal-card">
+        <div class="share-modal-title" id="shareModalTitle">图片分享</div>
+        <img id="shareImagePreview" class="share-modal-preview" alt="分享图片预览" />
+        <div class="share-modal-actions">
+          <button class="share-modal-btn primary" id="btnBackToShareSheet" type="button">返回分享方式</button>
+        </div>
+        <button class="share-modal-close" id="closeShareModal" type="button">关闭</button>
+      </div>
+    </div>
+
+    <div class="share-sheet" id="shareSheet" hidden>
+      <div class="share-sheet-backdrop" id="shareSheetBackdrop"></div>
+      <div class="share-sheet-card">
+        <div class="share-sheet-head">
+          <div>
+            <div class="share-sheet-title">分享</div>
+            <div class="share-sheet-subtitle">选择一种分享方式</div>
+          </div>
+          <button class="share-sheet-close" id="btnCloseShareSheet" type="button">关闭</button>
+        </div>
+        <div class="share-sheet-info" id="shareSheetInfo" hidden>
+          <div class="share-sheet-info-title" id="shareSheetInfoTitle"></div>
+          <div class="share-sheet-info-highlight" id="shareSheetInfoHighlight"></div>
+          <div class="share-sheet-info-note" id="shareSheetInfoNote"></div>
+        </div>
+        <div class="share-sheet-actions">
+          <button class="share-sheet-btn primary" id="btnShareLink" type="button">生成分享链接</button>
+          <button class="share-sheet-btn" id="btnShareImage" type="button">生成分享图片</button>
+        </div>
+      </div>
     </div>
 
     <!-- 页脚 -->

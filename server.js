@@ -40,6 +40,8 @@ const SUPABASE_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.PUBLIC_SUPABASE_ANON_KEY;
 
+const PASSCODE_SECRET = process.env.PASSCODE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+
 let supabaseClient = null;
 
 function getSupabaseClient() {
@@ -80,6 +82,11 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function hashPasscode(passcode) {
+  if (!PASSCODE_SECRET) throw new Error("Passcode secret is not configured. Set PASSCODE_SECRET.");
+  return crypto.createHmac("sha256", PASSCODE_SECRET).update(passcode).digest("hex");
+}
+
 async function getParticipantCount(event) {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
@@ -106,8 +113,16 @@ async function incrementParticipant(event) {
 async function getBlessingCount() {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
-  const { count, error } = await supabase.from("blessings").select("*", { count: "exact", head: true });
-  if (error) throw error;
+  const { count, error } = await supabase.from("blessings").select("*", { count: "exact", head: true }).eq("is_public", true);
+  if (error) {
+    const msg = typeof error.message === "string" ? error.message : "";
+    if (msg.includes("is_public") && msg.includes("column")) {
+      const { count: legacyCount, error: legacyError } = await supabase.from("blessings").select("*", { count: "exact", head: true });
+      if (legacyError) throw legacyError;
+      return typeof legacyCount === "number" ? legacyCount : 0;
+    }
+    throw error;
+  }
   return typeof count === "number" ? count : 0;
 }
 
@@ -152,8 +167,15 @@ function buildSupabaseSchemaError(err) {
     "create table if not exists public.blessings (",
     "  id bigserial primary key,",
     "  content text not null,",
+    "  is_public boolean not null default true,",
+    "  passcode_hash text,",
+    "  passcode_hint text,",
     "  created_at timestamptz not null default now()",
     ");",
+    "",
+    "create unique index if not exists blessings_passcode_hash_uniq",
+    "  on public.blessings(passcode_hash)",
+    "  where passcode_hash is not null;",
   ].join("\n");
 
   return `Supabase schema missing or inaccessible.\nRun this SQL in Supabase SQL Editor:\n\n${sql}\n\nOriginal error: ${original}`;
@@ -163,6 +185,10 @@ function handleApiError(res, err) {
   const msg = err && typeof err.message === "string" ? err.message : "";
   if (msg.startsWith("Supabase is not configured.")) {
     res.status(500).json({ error: "supabase_not_configured" });
+    return;
+  }
+  if (msg.startsWith("Passcode secret is not configured.")) {
+    res.status(500).json({ error: "passcode_not_configured" });
     return;
   }
   if (msg.startsWith("Supabase schema missing or inaccessible.")) {
@@ -235,13 +261,23 @@ app.get("/api/blessings", async (req, res) => {
     const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(100, Math.floor(limitRaw))) : 20;
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
-    const { data, error } = await supabase
-      .from("blessings")
-      .select("id, content, created_at")
-      .order("created_at", { ascending: false })
-      .limit(limit);
+    const query = supabase.from("blessings").select("id, content, created_at").eq("is_public", true).order("created_at", { ascending: false }).limit(limit);
+    const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      const msg = typeof error.message === "string" ? error.message : "";
+      if (msg.includes("is_public") && msg.includes("column")) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("blessings")
+          .select("id, content, created_at")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+        if (legacyError) throw legacyError;
+        res.json(legacyData || []);
+        return;
+      }
+      throw error;
+    }
     res.json(data || []);
   } catch (err) {
     handleApiError(res, err);
@@ -256,18 +292,89 @@ app.post("/api/blessings", async (req, res) => {
       return;
     }
 
+    const delivery = req.body?.delivery === "secret" ? "secret" : "public";
+    const passcode = typeof req.body?.passcode === "string" ? req.body.passcode.trim() : "";
+    const passcodeHint = typeof req.body?.passcodeHint === "string" ? req.body.passcodeHint.trim() : "";
+
+    if (delivery === "secret") {
+      if (!passcode || passcode.length > 64) {
+        res.status(400).json({ error: "invalid_passcode" });
+        return;
+      }
+      if (passcodeHint.length > 80) {
+        res.status(400).json({ error: "invalid_passcode_hint" });
+        return;
+      }
+    }
+
     const createdAt = nowIso();
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
-    const { data: blessing, error } = await supabase
+    const insertRow =
+      delivery === "secret"
+        ? {
+            content,
+            created_at: createdAt,
+            is_public: false,
+            passcode_hash: hashPasscode(passcode),
+            passcode_hint: passcodeHint ? passcodeHint : null,
+          }
+        : { content, created_at: createdAt, is_public: true, passcode_hash: null, passcode_hint: null };
+
+    const { data: blessing, error } = await supabase.from("blessings").insert(insertRow).select("id, content, created_at, is_public, passcode_hint").single();
+
+    if (error) {
+      const code = typeof error.code === "string" ? error.code : "";
+      if (code === "23505") {
+        res.status(409).json({ error: "passcode_taken" });
+        return;
+      }
+      const msg = typeof error.message === "string" ? error.message : "";
+      if (delivery === "public" && msg.includes("is_public") && msg.includes("column")) {
+        const { data: legacyBlessing, error: legacyError } = await supabase
+          .from("blessings")
+          .insert({ content, created_at: createdAt })
+          .select("id, content, created_at")
+          .single();
+        if (legacyError) throw legacyError;
+        const publicCount = await getBlessingCount();
+        res.json({ blessing: legacyBlessing, publicCount, delivery: "public" });
+        return;
+      }
+      throw error;
+    }
+
+    const publicCount = await getBlessingCount();
+    res.json({ blessing, publicCount, delivery });
+  } catch (err) {
+    handleApiError(res, err);
+  }
+});
+
+app.post("/api/blessings/redeem", async (req, res) => {
+  try {
+    const passcode = typeof req.body?.passcode === "string" ? req.body.passcode.trim() : "";
+    if (!passcode || passcode.length > 64) {
+      res.status(400).json({ error: "invalid_passcode" });
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+
+    const { data, error } = await supabase
       .from("blessings")
-      .insert({ content, created_at: createdAt })
-      .select("id, content, created_at")
-      .single();
+      .select("id, content, created_at, passcode_hint")
+      .eq("passcode_hash", hashPasscode(passcode))
+      .maybeSingle();
 
     if (error) throw error;
-    const totalCount = await getBlessingCount();
-    res.json({ blessing, totalCount });
+    if (!data) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+
+    res.json({ blessing: data });
   } catch (err) {
     handleApiError(res, err);
   }
