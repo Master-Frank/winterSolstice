@@ -259,6 +259,7 @@ function showBlessingCard(content, options) {
     if (elements.cardPasscode) {
         elements.cardPasscode.hidden = !Boolean(passcode);
         if (passcode) elements.cardPasscode.textContent = `暗号：${passcode}`;
+        else elements.cardPasscode.textContent = '';
     }
     if (elements.cardNote) {
         elements.cardNote.hidden = !Boolean(opts.note);
@@ -579,7 +580,7 @@ async function generateShareImage() {
         ctx.fillStyle = '#fff5e6';
         ctx.font = '950 58px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
         ctx.fillText('你的专属祝福暗号', centerX, centerStartY);
-        const centerText = state.lastShare.passcodeHint ? `暗号提示  ${state.lastShare.passcodeHint}` : `暗号  ${state.lastShare.passcode}`;
+        const centerText = state.lastShare.passcodeHint ? `暗号提示：${state.lastShare.passcodeHint}` : `暗号：${state.lastShare.passcode}`;
         ctx.fillText(centerText, centerX, centerStartY + 86);
 
         ctx.textAlign = 'left';
