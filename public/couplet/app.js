@@ -577,15 +577,25 @@ async function generateShareImagePreview() {
     ctx.stroke();
     ctx.drawImage(qrImg, qrBoxX + 16, qrBoxY + 16, qrSize - 32, qrSize - 32);
 
-    ctx.fillStyle = 'rgba(255, 236, 209, 0.78)';
+    const footerX = cardX + 64;
+    const footerY1 = cardY + cardH - 98;
+    const footerY2 = cardY + cardH - 54;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 6;
+
+    ctx.fillStyle = 'rgba(255, 236, 209, 0.86)';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.font = '600 28px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
-    ctx.fillText('扫码生成你的春联', titleX, cardY + cardH - 92);
+    ctx.font = '800 34px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillText('扫码生成你的春联', footerX, footerY1);
 
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.86)';
-    ctx.font = '600 24px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
-    ctx.fillText('#TRAE 新春码力全开', titleX, cardY + cardH - 52);
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.92)';
+    ctx.font = '800 30px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillText('#TRAE 新春码力全开', footerX, footerY2);
+    ctx.restore();
 
     if (shareImageObjectUrl) {
         try { URL.revokeObjectURL(shareImageObjectUrl); } catch (e) {}
