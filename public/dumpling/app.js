@@ -603,7 +603,7 @@ async function generateShareImage() {
     ctx.font = '900 40px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
     const qrLabel = state.lastShare.delivery === 'secret' ? '扫码查看你的专属祝福' : '扫码看看锅里的祝福';
     const qrLabelLines = wrapLines(ctx, qrLabel, qrSize + 10);
-    let qrLabelY = qrY - 27;
+    let qrLabelY = qrY - 32;
     for (let i = qrLabelLines.length - 1; i >= 0; i--) {
         const line = qrLabelLines[i];
         const w = ctx.measureText(line).width;

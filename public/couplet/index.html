@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>马年春联生成器 - 新春码力全开</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 话题标签 -->
+    <div class="topic-tag">#TRAE 新春码力全开</div>
+
+    <img class="trae-logo" src="trae.image" alt="TRAE" />
+
+    <div class="container">
+        <!-- 标题区 -->
+        <header class="header">
+            <h1 class="main-title">🖌️ 马年春联生成器</h1>
+            <p class="sub-title">输入心愿 · AI为你写春联</p>
+        </header>
+
+        <!-- 输入区 -->
+        <section class="input-section">
+            <div class="input-wrapper">
+                <input type="text" id="wishInput" placeholder="输入你的名字或新年愿望..." maxlength="10">
+                <button id="generateBtn" class="generate-btn">生成春联 🖌️</button>
+            </div>
+            
+            <div class="tags-wrapper">
+                <div class="tags-container" id="tagsContainer">
+                    <!-- 标签由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 春联展示区 -->
+        <section class="display-section" id="displaySection">
+            <!-- 空状态 -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📜</div>
+                <div class="empty-text">输入心愿，为你挥毫</div>
+            </div>
+
+            <!-- 卷轴容器 -->
+            <div class="couplet-container hidden" id="coupletContainer">
+                <div class="cross-scroll">
+                    <div class="scroll-paper">
+                        <div class="scroll-text horizontal" id="crossText"></div>
+                    </div>
+                </div>
+                
+                <div class="vertical-scrolls">
+                    <div class="scroll-wrapper right">
+                        <div class="scroll-paper">
+                            <div class="scroll-text vertical" id="upperText"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="scroll-wrapper left">
+                        <div class="scroll-paper">
+                            <div class="scroll-text vertical" id="lowerText"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 操作按钮区 -->
+        <section class="action-section hidden" id="actionSection">
+            <button class="action-btn outline" id="refreshBtn">
+                <span class="btn-icon">🔄</span> 换一副
+            </button>
+            <div class="action-btn solid" id="btnShare" role="button" tabindex="0">
+                <span class="btn-icon">📤</span> 分享
+            </div>
+        </section>
+
+        <!-- 历史记录区 -->
+        <section class="history-section">
+            <h3 class="history-title">📜 历史春联</h3>
+            <div class="history-list" id="historyList">
+                <!-- 历史卡片由JS生成 -->
+            </div>
+        </section>
+    </div>
+
+    <!-- 粒子容器 -->
+    <canvas id="particlesCanvas"></canvas>
+    
+    <!-- 庆祝特效容器 -->
+    <div id="celebrationContainer"></div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <div id="shareSheet" class="share-modal hidden" aria-hidden="true">
+        <div id="shareSheetMask" class="share-mask"></div>
+        <div class="share-panel" role="dialog" aria-modal="true" aria-label="分享">
+            <div class="share-card">
+                <div class="share-head">
+                    <div>
+                        <div class="share-title">分享</div>
+                        <div class="share-sub">选择一种分享方式</div>
+                    </div>
+                    <button id="btnCloseShareSheet" class="share-close" type="button">关闭</button>
+                </div>
+                <div class="share-actions">
+                    <button id="btnShareLink" class="share-btn share-btn-primary" type="button">生成分享链接</button>
+                    <button id="btnShareImage" class="share-btn share-btn-secondary" type="button">生成分享图片</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="shareImageModal" class="share-modal hidden" aria-hidden="true">
+        <div id="shareImageMask" class="share-mask"></div>
+        <div class="share-panel" role="dialog" aria-modal="true" aria-label="分享图片">
+            <div class="share-card">
+                <div class="share-head">
+                    <div>
+                        <div class="share-title">分享图片</div>
+                        <div class="share-sub">长按图片保存</div>
+                    </div>
+                    <button id="btnCloseShareImage" class="share-close" type="button">关闭</button>
+                </div>
+                <div class="share-preview-wrap">
+                    <img id="shareImagePreview" class="share-preview" alt="分享图片预览" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

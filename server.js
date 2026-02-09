@@ -222,9 +222,106 @@ app.get("/dumpling", (req, res, next) => {
   next();
 });
 
+app.get("/couplet", (req, res, next) => {
+  if (req.originalUrl === "/couplet") {
+    res.redirect(301, "/couplet/");
+    return;
+  }
+  next();
+});
+
 app.use("/cloud", express.static(path.join(__dirname, "public", "cloud")));
 app.use("/dumpling", express.static(path.join(__dirname, "public", "dumpling")));
+app.use("/couplet", express.static(path.join(__dirname, "public", "couplet")));
 app.use(express.static(path.join(__dirname, "public")));
+
+// --- Couplet AI Logic ---
+const FALLBACK_COUPLETS = [
+  { keywords: ["default", "马", "新年"], upper: "神马当先迎新岁", lower: "龙腾虎跃展宏图", cross: "马到成功" },
+  { keywords: ["财", "富", "钱"], upper: "财源滚滚随春到", lower: "喜气洋洋伴福来", cross: "招财进宝" },
+  { keywords: ["学", "考", "智"], upper: "书山有路勤为径", lower: "学海无涯苦作舟", cross: "金榜题名" },
+  { keywords: ["家", "团圆", "亲"], upper: "一家和睦一家福", lower: "四季平安四季春", cross: "阖家欢乐" },
+  { keywords: ["爱", "情", "婚"], upper: "百年好合双心结", lower: "五世其昌百事兴", cross: "永结同心" },
+  { keywords: ["事业", "职", "工"], upper: "大展宏图兴伟业", lower: "与时俱进创辉煌", cross: "前程似锦" },
+  { keywords: ["健康", "体", "寿"], upper: "福如东海长流水", lower: "寿比南山不老松", cross: "健康长寿" },
+  { keywords: ["甜蜜", "甜"], upper: "生活甜蜜如蜜糖", lower: "日子红火似火炉", cross: "幸福美满" },
+  { keywords: ["升职", "高升"], upper: "步步高升鹏程远", lower: "官运亨通事业兴", cross: "平步青云" },
+  { keywords: ["腾飞"], upper: "骏马奔腾开胜景", lower: "春风浩荡展鸿图", cross: "大展宏图" },
+];
+
+async function generateCoupletAI(keyword) {
+  // 1. Easter Egg
+  if (keyword.toUpperCase() === "TRAE") {
+    return { upper: "代码千行马蹄急", lower: "创意无限春风来", cross: "码力全开" };
+  }
+
+  // 2. Try Real API
+  const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const apiBase = process.env.AI_API_BASE || "https://api.openai.com/v1";
+  
+  if (apiKey) {
+    try {
+      const prompt = `请为我创作一副关于"${keyword}"的马年春联。要求：
+1. 包含上联、下联、横批。
+2. 字数：上联下联各7个字，横批4个字。
+3. 风格：喜庆、吉祥、文雅。
+4. 必须以JSON格式返回，格式为：{"upper": "上联内容", "lower": "下联内容", "cross": "横批内容"}。
+5. 不要包含任何其他文字或Markdown格式。`;
+
+      const response = await fetch(`${apiBase}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: process.env.AI_MODEL_NAME || "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: "你是一个精通中国传统文化的AI助手，擅长写春联。" },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0].message.content.trim();
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      } else {
+        console.error("AI API Error:", await response.text());
+      }
+    } catch (e) {
+      console.error("AI Generation Failed:", e);
+    }
+  }
+
+  // 3. Fallback Logic
+  const match = FALLBACK_COUPLETS.find(c => c.keywords.some(k => keyword.includes(k)));
+  if (match) return { upper: match.upper, lower: match.lower, cross: match.cross };
+  
+  const random = FALLBACK_COUPLETS[Math.floor(Math.random() * FALLBACK_COUPLETS.length)];
+  return { upper: random.upper, lower: random.lower, cross: random.cross };
+}
+
+app.post("/api/couplet/generate", async (req, res) => {
+  try {
+    const keyword = typeof req.body?.keyword === "string" ? req.body.keyword.trim() : "";
+    if (!keyword) {
+      res.status(400).json({ error: "keyword_required" });
+      return;
+    }
+    const couplet = await generateCoupletAI(keyword);
+    res.json(couplet);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "generation_failed" });
+  }
+});
+// -----------------------
 
 app.get("/api/participants", async (req, res) => {
   try {

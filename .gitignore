@@ -21,6 +21,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Trae IDE
+.trae/
+
 # Supabase
 supabase/.branches
 supabase/.temp
