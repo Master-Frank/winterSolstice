@@ -212,6 +212,12 @@ body::after { right: -20px; animation-delay: -3s; }
         filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.5));
     }
 
+    body.is-trae .vertical-scrolls::after {
+        width: 130px;
+        height: 48px;
+        opacity: 0.95;
+    }
+
     .vertical-scrolls .scroll-paper {
         width: 62px;
         padding: 22px 0;
@@ -545,6 +551,19 @@ body::after { right: -20px; animation-delay: -3s; }
     animation: pulse 3s infinite;
     z-index: 0;
     pointer-events: none;
+}
+
+body.is-trae .vertical-scrolls::after {
+    content: "";
+    width: 180px;
+    height: 60px;
+    background-image: var(--trae-center-mark-url);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    animation: none;
+    opacity: 0.95;
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.4));
 }
 
 .scroll-wrapper {

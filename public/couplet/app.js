@@ -16,12 +16,15 @@ const toast = document.getElementById('toast');
 // 状态
 let isGenerating = false;
 
+let traeCenterMarkDataUrl = null;
+
 // 初始化
 function init() {
     renderTags();
     loadHistory();
     initParticles();
     setupEventListeners();
+    updateTraeTheme();
 }
 
 // 渲染标签
@@ -35,6 +38,7 @@ function renderTags() {
 window.selectTag = function(tag) {
     wishInput.value = tag;
     wishInput.focus();
+    updateTraeTheme();
     // 简单的缩放反馈
     const tagEls = document.querySelectorAll('.tag');
     tagEls.forEach(el => {
@@ -48,6 +52,7 @@ window.selectTag = function(tag) {
 // 事件监听
 function setupEventListeners() {
     generateBtn.addEventListener('click', handleGenerate);
+    wishInput.addEventListener('input', updateTraeTheme);
     
     document.getElementById('refreshBtn').addEventListener('click', () => {
         // 退出动画
@@ -241,11 +246,60 @@ window.restoreHistory = function(index) {
     const item = history[index];
     if (item) {
         wishInput.value = item.keyword;
+        updateTraeTheme();
         renderCouplet(item);
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 };
+
+function isTraeName(name) {
+    return String(name || '').trim().toUpperCase() === 'TRAE';
+}
+
+function ensureTraeCenterMarkDataUrl() {
+    if (traeCenterMarkDataUrl) return traeCenterMarkDataUrl;
+
+    // Construct SVG with TRAE text (Geometric shapes for pixel-perfect control)
+    // Adjusted coordinates to be more condensed horizontally to match reference
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="180" height="60" viewBox="0 0 180 60">
+        <defs>
+            <filter id="d">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+            </filter>
+        </defs>
+        <g filter="url(#d)" fill="#FFFFFF">
+            <!-- T -->
+            <path d="M10 10 H48 V19 H33 V50 H24 V19 H10 Z" />
+            
+            <!-- R -->
+            <path d="M54 10 H78 C88 10 92 16 92 24 C92 31 88 35 82 36 L94 50 H84 L74 37 H62 V50 H54 Z M62 19 V29 H78 C82 29 84 27 84 24 C84 21 82 19 78 19 Z" />
+            
+            <!-- A -->
+            <path d="M110 10 H122 L136 50 H127 L124 40 H108 L105 50 H96 Z M116 19 L111 33 H121 Z" />
+            
+            <!-- E (with Diamond) -->
+            <path d="M142 10 H174 V19 H150 V41 H174 V50 H142 Z" />
+            <!-- Diamond -->
+            <rect x="160" y="24" width="11" height="11" transform="rotate(45 165.5 29.5)" />
+        </g>
+    </svg>
+    `.trim();
+
+    traeCenterMarkDataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+    return traeCenterMarkDataUrl;
+}
+
+function updateTraeTheme() {
+    const name = (wishInput?.value || '').trim();
+    const on = isTraeName(name);
+    document.body.classList.toggle('is-trae', on);
+    if (on) {
+        const url = ensureTraeCenterMarkDataUrl();
+        document.documentElement.style.setProperty('--trae-center-mark-url', `url("${url}")`);
+    }
+}
 
 let shareImageObjectUrl = null;
 
@@ -452,6 +506,7 @@ async function generateShareImagePreview() {
 
     showToast('正在生成分享图片…');
 
+    const name = (wishInput?.value || '').trim();
     const shareUrl = location.href;
     const [qrImg, logoImg] = await Promise.all([
         fetchQrImage(shareUrl),
@@ -542,8 +597,16 @@ async function generateShareImagePreview() {
     ctx.fillText('马年春联生成器', titleX, y);
     y += 52;
     ctx.fillStyle = 'rgba(255, 236, 209, 0.72)';
-    ctx.font = '600 30px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
-    ctx.fillText('你的专属春联', titleX, y);
+    const subtitle = name ? `${name}的专属春联` : '你的专属春联';
+    {
+        const maxW = (cardX + cardW - 54) - titleX;
+        const sizes = [30, 28, 26, 24];
+        for (let i = 0; i < sizes.length; i++) {
+            ctx.font = `600 ${sizes[i]}px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif`;
+            if (ctx.measureText(subtitle).width <= maxW || i === sizes.length - 1) break;
+        }
+        ctx.fillText(subtitle, titleX, y);
+    }
 
     const crossW = 520;
     const crossH = 120;
@@ -564,11 +627,31 @@ async function generateShareImagePreview() {
     drawScroll(ctx, lower, leftX, vY, vW, vH, true, seed ^ 0x2468ace1);
     drawScroll(ctx, upper, rightX, vY, vW, vH, true, seed ^ 0xdeadbeef);
 
-    ctx.font = '220px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.18)';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🐎', cardX + cardW / 2, vY + vH / 2 + 40);
+    if (isTraeName(name)) {
+        const img = new Image();
+        img.src = ensureTraeCenterMarkDataUrl();
+        await new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+        });
+
+        const aspect = img.width > 0 && img.height > 0 ? (img.width / img.height) : 3;
+        const dw = 280; // Adjusted size for narrower SVG
+        const dh = Math.floor(dw / aspect);
+        const dx = Math.floor(cardX + (cardW - dw) / 2);
+        const dy = Math.floor(vY + vH / 2 - dh / 2 + 40);
+        ctx.save();
+        ctx.globalAlpha = 0.95;
+        ctx.filter = 'drop-shadow(0 0 16px rgba(255, 215, 0, 0.4))';
+        ctx.drawImage(img, dx, dy, dw, dh);
+        ctx.restore();
+    } else {
+        ctx.font = '220px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.18)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🐎', cardX + cardW / 2, vY + vH / 2 + 40);
+    }
     roundRectPath(ctx, qrBoxX, qrBoxY, qrSize, qrSize, 28);
     ctx.fillStyle = 'rgba(255,255,255,0.96)';
     ctx.fill();
