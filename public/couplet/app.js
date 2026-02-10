@@ -260,34 +260,8 @@ function isTraeName(name) {
 function ensureTraeCenterMarkDataUrl() {
     if (traeCenterMarkDataUrl) return traeCenterMarkDataUrl;
 
-    // Construct SVG with TRAE text (Geometric shapes for pixel-perfect control)
-    // Adjusted coordinates to be more condensed horizontally to match reference
-    const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="180" height="60" viewBox="0 0 180 60">
-        <defs>
-            <filter id="d">
-                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
-            </filter>
-        </defs>
-        <g filter="url(#d)" fill="#FFFFFF">
-            <!-- T -->
-            <path d="M10 10 H48 V19 H33 V50 H24 V19 H10 Z" />
-            
-            <!-- R -->
-            <path d="M54 10 H78 C88 10 92 16 92 24 C92 31 88 35 82 36 L94 50 H84 L74 37 H62 V50 H54 Z M62 19 V29 H78 C82 29 84 27 84 24 C84 21 82 19 78 19 Z" />
-            
-            <!-- A -->
-            <path d="M110 10 H122 L136 50 H127 L124 40 H108 L105 50 H96 Z M116 19 L111 33 H121 Z" />
-            
-            <!-- E (with Diamond) -->
-            <path d="M142 10 H174 V19 H150 V41 H174 V50 H142 Z" />
-            <!-- Diamond -->
-            <rect x="160" y="24" width="11" height="11" transform="rotate(45 165.5 29.5)" />
-        </g>
-    </svg>
-    `.trim();
-
-    traeCenterMarkDataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+    // Use the provided trae-text.svg file
+    traeCenterMarkDataUrl = 'trae-text.svg';
     return traeCenterMarkDataUrl;
 }
 
@@ -510,7 +484,7 @@ async function generateShareImagePreview() {
     const shareUrl = location.href;
     const [qrImg, logoImg] = await Promise.all([
         fetchQrImage(shareUrl),
-        fetchStaticImage('trae.image').catch(() => null)
+        fetchStaticImage('trae-color.svg').catch(() => null)
     ]);
     const seed = hashString(cross + '|' + upper + '|' + lower);
 
@@ -576,11 +550,13 @@ async function generateShareImagePreview() {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    const logoSize = 76;
-    const logoX = cardX + 54;
-    const logoY = cardY + 58;
+    const borderHeight = 106;
+    const padding = 16;
+    const logoSize = borderHeight - padding * 2;
+    const logoX = cardX + 64;
+    const logoY = cardY + 68;
     if (logoImg) {
-        roundRectPath(ctx, logoX - 10, logoY - 10, logoSize + 20, logoSize + 20, 20);
+        roundRectPath(ctx, logoX - padding, logoY - padding, logoSize + padding * 2, borderHeight, 20);
         ctx.fillStyle = 'rgba(0,0,0,0.18)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 215, 0, 0.32)';
@@ -590,7 +566,7 @@ async function generateShareImagePreview() {
     }
 
     let y = cardY + 110;
-    const titleX = logoImg ? (logoX + logoSize + 26) : (cardX + 64);
+    const titleX = logoImg ? (logoX + logoSize + 36) : (cardX + 64);
 
     ctx.fillStyle = 'rgba(255, 236, 209, 0.96)';
     ctx.font = '900 54px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
@@ -646,11 +622,23 @@ async function generateShareImagePreview() {
         ctx.drawImage(img, dx, dy, dw, dh);
         ctx.restore();
     } else {
-        ctx.font = '220px system-ui,-apple-system,Segoe UI,Roboto,PingFang SC,Microsoft YaHei,sans-serif';
-        ctx.fillStyle = 'rgba(255, 215, 0, 0.18)';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('🐎', cardX + cardW / 2, vY + vH / 2 + 40);
+        const img = new Image();
+        img.src = 'horse.png';
+        await new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+        });
+
+        const aspect = img.width > 0 && img.height > 0 ? (img.width / img.height) : 1;
+        const dw = 360;
+        const dh = Math.floor(dw / aspect);
+        const dx = Math.floor(cardX + (cardW - dw) / 2);
+        const dy = Math.floor(vY + vH / 2 - dh / 2 + 40);
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.filter = 'drop-shadow(0 0 32px rgba(255, 215, 0, 1)) brightness(1.3)';
+        ctx.drawImage(img, dx, dy, dw, dh);
+        ctx.restore();
     }
     roundRectPath(ctx, qrBoxX, qrBoxY, qrSize, qrSize, 28);
     ctx.fillStyle = 'rgba(255,255,255,0.96)';
